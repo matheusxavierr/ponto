@@ -10,6 +10,7 @@ const copyButton = document.getElementById('copy');
 const copyLabel = document.getElementById('copy-label');
 const copyStatus = document.getElementById('copy-status');
 const formatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const resultFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0, useGrouping: false });
 const inputFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
 let currentResult = null;
 let feedbackTimer;
@@ -31,6 +32,11 @@ function calculate(x) {
 function format(value) {
   // Normalize tiny negative values so rounding never displays "-0,00".
   return formatter.format(Math.abs(value) < 0.005 ? 0 : value);
+}
+
+function formatResult(value) {
+  // Change only the presentation: keep the signed, precise calculation intact.
+  return resultFormatter.format(Math.trunc(Math.abs(value)));
 }
 
 function clearCopyFeedback() {
@@ -81,7 +87,7 @@ function update(showEmptyError = false) {
   }
   setError();
   currentResult = stop;
-  const resultText = format(stop);
+  const resultText = formatResult(stop);
   resultElement.textContent = resultText;
   resultElement.classList.toggle('compact', resultText.length > 12);
   resultHint.textContent = `Para o valor de perfil ${inputFormatter.format(x)}.`;
@@ -117,7 +123,7 @@ document.querySelectorAll('[data-value]').forEach(button => {
 copyButton.addEventListener('click', async () => {
   if (currentResult === null) return;
   const copiedValue = currentResult;
-  const text = format(copiedValue);
+  const text = formatResult(copiedValue);
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);

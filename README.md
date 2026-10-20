@@ -16,8 +16,10 @@ Z = Y / 0.9
 Onde precisa parar = Z - 1000
 ```
 
-Aceita valores positivos, negativos e decimais com vírgula ou ponto, sem separador de milhar. O cálculo mantém a precisão entre as etapas e arredonda apenas a exibição para duas casas decimais. Resultados negativos preservam o sinal.
+Aceita valores positivos, negativos e decimais com vírgula ou ponto, sem separador de milhar. A fórmula mantém o sinal e a precisão entre as etapas. Os valores intermediários são exibidos com duas casas decimais.
 
-Exemplos: X = -300 resulta em 0,00; X = 0 resulta em -333,33; X = 300 resulta em -666,67.
+O resultado final, o campo PARADA e o botão Copiar mostram apenas o valor absoluto inteiro, cortando as casas decimais sem arredondar. Essa formatação não altera o cálculo original.
+
+Exemplos: X = -300 exibe 0; X = 0 exibe 333; X = 300 exibe 666 (o resultado original da fórmula continua sendo aproximadamente -666,67).
 
 Os cálculos são feitos no navegador. A fonte é carregada pelo Google Fonts; sem conexão, a página utiliza uma fonte do sistema e continua funcionando.
