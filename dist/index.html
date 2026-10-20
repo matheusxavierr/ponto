@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f8fa">
+    <meta name="description" content="Informe o valor do seu perfil e calcule onde precisa parar. Uma calculadora simples com todas as etapas da fórmula.">
+    <title>Ponto — Calculadora de perfil</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <a class="brand" href="./" aria-label="Ponto, início">
+          <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></svg></span>
+          ponto<span class="brand-dot">.</span>
+        </a>
+        <span class="header-note"><span class="status-dot"></span> Simples. Direto. Calculado.</span>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow"><span></span> CALCULADORA DE PERFIL</p>
+          <h1 id="page-title">Seu valor de perfil.<br>Seu <span>ponto de parada.</span></h1>
+          <p class="intro-text">Informe o valor que aparece no seu perfil.<br class="desktop-break"> A gente faz a conta e mostra onde você precisa parar.</p>
+        </section>
+
+        <section class="calculator" aria-label="Calculadora do ponto de parada">
+          <form id="calculator-form" class="input-panel" novalidate>
+            <div class="panel-heading"><span class="section-number">01</span><h2>Comece pelo seu perfil</h2></div>
+            <div class="label-row"><label for="profile">Valor no perfil <span class="variable">X</span></label><button class="text-button" id="reset" type="reset">Limpar</button></div>
+            <div class="input-wrap" id="input-wrap">
+              <span class="input-symbol" aria-hidden="true">#</span>
+              <input id="profile" name="profile" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Ex.: 300" aria-describedby="input-hint input-error">
+            </div>
+            <p class="input-hint" id="input-hint">Aceita valores negativos e decimais com vírgula ou ponto.</p>
+            <p class="input-error" id="input-error" role="alert" hidden></p>
+            <button class="calculate-button" type="submit">Calcular ponto de parada <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
+            <div class="examples"><span>Experimente</span><button type="button" data-value="-500">−500</button><button type="button" data-value="0">0</button><button type="button" data-value="300">300</button></div>
+          </form>
+
+          <div class="result-panel" id="result-panel">
+            <div class="result-top"><span class="result-label"><span class="status-dot"></span> SEU RESULTADO</span><svg class="result-target" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m15 9 6-6m-5 0h5v5"/></svg></div>
+            <div class="result-content" role="status" aria-live="polite" aria-atomic="true">
+              <h2>Onde precisa parar</h2>
+              <p class="result-number" id="result">—</p>
+              <p class="result-hint" id="result-hint">Seu ponto de parada aparece aqui.</p>
+            </div>
+            <div class="result-bottom"><span class="precision-note">Resultado com 2 casas decimais</span><button class="copy-button" id="copy" type="button" disabled aria-label="Copiar resultado"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span id="copy-label">Copiar</span></button></div>
+            <span class="sr-only" role="status" id="copy-status"></span>
+          </div>
+        </section>
+
+        <section class="breakdown" aria-labelledby="breakdown-title">
+          <div class="breakdown-heading"><h2 id="breakdown-title">Por dentro da conta</h2><span>Passo a passo, sem mistério.</span></div>
+          <ol class="steps">
+            <li class="step"><div class="step-label"><span class="step-number">1</span> Subtrair o perfil</div><p class="step-equation">600 − <span id="step-x">X</span></p><div class="step-bottom"><span>Y</span><output id="step-y">—</output></div></li>
+            <li class="step"><div class="step-label"><span class="step-number">2</span> Dividir por 0,9</div><p class="step-equation"><span id="step-y-equation">Y</span> ÷ 0,9</p><div class="step-bottom"><span>Z</span><output id="step-z">—</output></div></li>
+            <li class="step step-final"><div class="step-label"><span class="step-number">3</span> Encontrar o ponto</div><p class="step-equation"><span id="step-z-equation">Z</span> − 1.000</p><div class="step-bottom"><span>PARADA</span><output id="step-final">—</output></div></li>
+          </ol>
+          <div class="formula"><span class="formula-label">A FÓRMULA</span><code>((600 − X) ÷ 0,9) − 1000</code><span class="formula-note">X = valor no perfil</span></div>
+        </section>
+      </main>
+
+      <footer><span class="footer-brand">ponto.</span><span>Menos contas. Mais clareza.</span><span class="local-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> O cálculo acontece no seu navegador.</span></footer>
+    </div>
+  </body>
+</html>
