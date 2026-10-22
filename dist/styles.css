@@ -20,6 +20,11 @@ svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.7;stroke-linecap:r
 .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
 main{display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,2dvh,20px);min-height:0;min-width:0}
 main>section{flex-shrink:0;min-width:0}
+.formula-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;width:min(100%,400px);flex-shrink:0;background:var(--field);border:1px solid var(--line);border-radius:11px}
+.formula-tab{padding:7px 10px;min-width:0;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;line-height:18px;transition:background .18s,color .18s}
+.formula-tab:hover{background:var(--badge);color:var(--ink)}
+.formula-tab[aria-selected="true"]{background:var(--accent);color:#20140e}
+.formula-panel{display:flex;flex-direction:column;gap:inherit;min-width:0;flex-shrink:0}
 .eyebrow{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:11px;letter-spacing:1.7px;font-weight:700;margin:0 0 8px}
 .eyebrow span{width:17px;height:2px;background:var(--accent)}
 h1{font-family:'Manrope',var(--font);font-size:clamp(27px,3.5vw,38px);line-height:1.2;letter-spacing:-1.4px;margin:0;font-weight:750}
@@ -144,7 +149,7 @@ footer{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line)
 }
 @media(max-height:640px){
   .page{grid-template-rows:36px minmax(0,1fr);padding-block:8px;gap:8px}
-  footer,.intro-text,.eyebrow,.examples{display:none}
+  footer,.intro,.intro-text,.eyebrow,.examples{display:none}
   main{gap:10px}
   h1{font-size:27px}
   .breakdown-heading{display:none}
@@ -161,11 +166,18 @@ footer{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line)
   .result-number{font-size:36px}
   .formula{margin:0;padding:0}
 }
+@media(max-height:440px) and (max-width:580px){
+  .breakdown{display:none}
+}
 @media(max-height:380px) and (max-width:580px){
   .page{grid-template-rows:minmax(0,1fr);padding-block:7px}
   .header,.breakdown{display:none}
-  .input-panel{padding:10px 14px}
+  main,.formula-panel{gap:6px}
+  .formula-tabs{padding:3px;gap:3px}
+  .formula-tab{padding:4px 8px;font-size:12px}
+  .input-panel{padding:8px 12px}
   .input-error{font-size:11px;margin:4px 0}
   .result-panel{padding-block:10px}
+  .result-number{font-size:30px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

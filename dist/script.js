@@ -9,9 +9,12 @@ const resultHint = document.getElementById('result-hint');
 const copyButton = document.getElementById('copy');
 const copyLabel = document.getElementById('copy-label');
 const copyStatus = document.getElementById('copy-status');
+const formulaTabs = Array.from(document.querySelectorAll('[data-divisor]'));
+const formulaPanel = document.getElementById('formula-panel');
 const formatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const resultFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0, useGrouping: false });
 const inputFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
+let activeDivisor = 0.9;
 let currentResult = null;
 let feedbackTimer;
 
@@ -22,9 +25,9 @@ function parseProfile(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function calculate(x) {
+function calculate(x, divisor) {
   const y = 600 - x;
-  const z = y / 0.9;
+  const z = y / divisor;
   const stop = z - 1000;
   return { y, z, stop };
 }
@@ -79,7 +82,7 @@ function update(showEmptyError = false) {
     setError('Informe um número válido, como 300, −500 ou 150,50. Não use separador de milhar.');
     return false;
   }
-  const { y, z, stop } = calculate(x);
+  const { y, z, stop } = calculate(x, activeDivisor);
   if (![y, z, stop].every(Number.isFinite)) {
     renderEmpty();
     setError('Esse valor é muito grande. Digite um valor menor.');
@@ -100,6 +103,36 @@ function update(showEmptyError = false) {
   document.getElementById('step-final').textContent = resultText;
   return true;
 }
+
+function selectFormula(selectedTab) {
+  activeDivisor = Number(selectedTab.dataset.divisor);
+  formulaTabs.forEach(tab => {
+    const selected = tab === selectedTab;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  formulaPanel.setAttribute('aria-labelledby', selectedTab.id);
+  const divisorText = inputFormatter.format(activeDivisor);
+  ['divisor-label', 'step-divisor', 'formula-divisor'].forEach(id => {
+    document.getElementById(id).textContent = divisorText;
+  });
+  update();
+}
+
+formulaTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => selectFormula(tab));
+  tab.addEventListener('keydown', event => {
+    let nextIndex;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % formulaTabs.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + formulaTabs.length) % formulaTabs.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = formulaTabs.length - 1;
+    else return;
+    event.preventDefault();
+    selectFormula(formulaTabs[nextIndex]);
+    formulaTabs[nextIndex].focus();
+  });
+});
 
 profile.addEventListener('input', () => update());
 form.addEventListener('submit', event => {
