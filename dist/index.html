@@ -37,12 +37,24 @@
 
         <div class="formula-panel" id="formula-panel" role="tabpanel" aria-labelledby="formula-09">
         <section class="calculator" aria-label="Calculadora do ponto de parada">
-          <form id="calculator-form" class="input-panel" novalidate>
+          <form id="calculator-form" class="input-panel" aria-labelledby="values-title" novalidate>
             <div class="panel-heading"><span class="section-number">01</span><h2>Comece pelo seu perfil</h2></div>
-            <div class="label-row"><label for="profile">Valor no perfil <span class="variable">X</span></label><button class="text-button" id="reset" type="reset">Limpar</button></div>
-            <div class="input-wrap" id="input-wrap">
-              <span class="input-symbol" aria-hidden="true">#</span>
-              <input id="profile" name="profile" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Ex.: 300" aria-describedby="input-hint input-error">
+            <div class="label-row"><h2 class="form-label" id="values-title">Valores do cálculo</h2><button class="text-button" id="reset" type="reset">Limpar</button></div>
+            <div class="calculation-inputs">
+              <div class="calculation-field">
+                <label for="initial-value">Valor inicial <span class="variable">B</span></label>
+                <div class="input-wrap" id="initial-wrap">
+                  <span class="input-symbol" aria-hidden="true">#</span>
+                  <input id="initial-value" name="initial-value" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="600" aria-describedby="input-hint input-error">
+                </div>
+              </div>
+              <div class="calculation-field">
+                <label for="profile">Valor no perfil <span class="variable">X</span></label>
+                <div class="input-wrap" id="input-wrap">
+                  <span class="input-symbol" aria-hidden="true">#</span>
+                  <input id="profile" name="profile" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="Ex.: 300" aria-describedby="input-hint input-error">
+                </div>
+              </div>
             </div>
             <p class="input-hint" id="input-hint">Negativos e decimais: −500 ou 150,50.</p>
             <p class="input-error" id="input-error" role="alert" hidden></p>
@@ -65,11 +77,11 @@
         <section class="breakdown" aria-labelledby="breakdown-title">
           <div class="breakdown-heading"><h2 id="breakdown-title">Por dentro da conta</h2><span>Passo a passo, sem mistério.</span></div>
           <ol class="steps">
-            <li class="step"><div class="step-label"><span class="step-number">1</span> Subtrair o perfil</div><p class="step-equation">600 − <span id="step-x">X</span></p><div class="step-bottom"><span>Y</span><output id="step-y">—</output></div></li>
+            <li class="step"><div class="step-label"><span class="step-number">1</span> Subtrair o perfil</div><p class="step-equation"><span id="step-initial">600</span> − <span id="step-x">X</span></p><div class="step-bottom"><span>Y</span><output id="step-y">—</output></div></li>
             <li class="step"><div class="step-label"><span class="step-number">2</span><span>Dividir por <span id="divisor-label">0,9</span></span></div><p class="step-equation"><span id="step-y-equation">Y</span> ÷ <span id="step-divisor">0,9</span></p><div class="step-bottom"><span>Z</span><output id="step-z">—</output></div></li>
             <li class="step step-final"><div class="step-label"><span class="step-number">3</span> Encontrar o ponto</div><p class="step-equation"><span id="step-z-equation">Z</span> − 1.000</p><div class="step-bottom"><span>PARADA</span><output id="step-final">—</output></div></li>
           </ol>
-          <div class="formula"><span class="formula-label">A FÓRMULA</span><code>((600 − X) ÷ <span id="formula-divisor">0,9</span>) − 1000</code><span class="formula-note">X = valor no perfil</span></div>
+          <div class="formula"><span class="formula-label">A FÓRMULA</span><code>((<span id="formula-initial">600</span> − X) ÷ <span id="formula-divisor">0,9</span>) − 1000</code><span class="formula-note">X = valor no perfil</span></div>
         </section>
         </div>
       </main>

@@ -2,6 +2,8 @@
 
 const form = document.getElementById('calculator-form');
 const profile = document.getElementById('profile');
+const initialValue = document.getElementById('initial-value');
+const initialWrap = document.getElementById('initial-wrap');
 const inputWrap = document.getElementById('input-wrap');
 const inputError = document.getElementById('input-error');
 const resultElement = document.getElementById('result');
@@ -18,15 +20,15 @@ let activeDivisor = 0.9;
 let currentResult = null;
 let feedbackTimer;
 
-function parseProfile(value) {
+function parseValue(value) {
   const normalized = value.trim().replace(/\u2212/g, '-');
   if (!/^[+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+)$/.test(normalized)) return null;
   const number = Number(normalized.replace(',', '.'));
   return Number.isFinite(number) ? number : null;
 }
 
-function calculate(x, divisor) {
-  const y = 600 - x;
+function calculate(x, divisor, initial) {
+  const y = initial - x;
   const z = y / divisor;
   const stop = z - 1000;
   return { y, z, stop };
@@ -48,12 +50,15 @@ function clearCopyFeedback() {
   copyStatus.textContent = '';
 }
 
-function setError(message = '') {
+function setError(message = '', field = profile) {
   inputError.textContent = message;
   inputError.hidden = !message;
-  inputWrap.classList.toggle('invalid', Boolean(message));
-  if (message) profile.setAttribute('aria-invalid', 'true');
-  else profile.removeAttribute('aria-invalid');
+  inputWrap.classList.toggle('invalid', Boolean(message) && field === profile);
+  initialWrap.classList.toggle('invalid', Boolean(message) && field === initialValue);
+  [profile, initialValue].forEach(input => {
+    if (message && field === input) input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+  });
 }
 
 function renderEmpty() {
@@ -70,19 +75,35 @@ function renderEmpty() {
 
 function update(showEmptyError = false) {
   clearCopyFeedback();
+  const initialText = initialValue.value.trim();
+  const initial = parseValue(initialText);
+  const initialOperand = initial === null ? 'B' : (initial < 0 ? `(${inputFormatter.format(initial)})` : inputFormatter.format(initial));
+  ['step-initial', 'formula-initial'].forEach(id => {
+    document.getElementById(id).textContent = initialOperand;
+  });
+  if (!initialText) {
+    renderEmpty();
+    setError(showEmptyError ? 'Digite o valor inicial.' : '', initialValue);
+    return false;
+  }
+  if (initial === null) {
+    renderEmpty();
+    setError('Informe um número válido no valor inicial, como 600 ou 600,50.', initialValue);
+    return false;
+  }
   const value = profile.value.trim();
   if (!value) {
     renderEmpty();
     setError(showEmptyError ? 'Digite o valor que aparece no seu perfil.' : '');
     return false;
   }
-  const x = parseProfile(value);
+  const x = parseValue(value);
   if (x === null) {
     renderEmpty();
     setError('Informe um número válido, como 300, −500 ou 150,50. Não use separador de milhar.');
     return false;
   }
-  const { y, z, stop } = calculate(x, activeDivisor);
+  const { y, z, stop } = calculate(x, activeDivisor, initial);
   if (![y, z, stop].every(Number.isFinite)) {
     renderEmpty();
     setError('Esse valor é muito grande. Digite um valor menor.');
@@ -135,12 +156,14 @@ formulaTabs.forEach((tab, index) => {
 });
 
 profile.addEventListener('input', () => update());
+initialValue.addEventListener('input', () => update());
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (!update(true)) profile.focus();
+  if (!update(true)) (form.querySelector('[aria-invalid="true"]') || profile).focus();
 });
-form.addEventListener('reset', () => {
-  // The reset event fires before the browser clears form fields.
+form.addEventListener('reset', event => {
+  // Clear the profile while preserving the chosen initial value and formula.
+  event.preventDefault();
   profile.value = '';
   update();
   profile.focus();
