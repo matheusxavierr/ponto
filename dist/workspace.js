@@ -95,7 +95,7 @@
   }
 
   function resultFor(record) {
-    return calculator.formatResult(calculator.calculate(record.x, record.divisor, record.initial).stop);
+    return calculator.getPresentation(record).value;
   }
 
   function destinationHint() {
@@ -114,12 +114,20 @@
     cards.replaceChildren();
     const record = screens[selectedScreen];
     const card = element('article', 'deposit-card');
-    card.append(element('h4', 'deposit-label', 'Último valor salvo'));
+    const presentation = record ? calculator.getPresentation(record) : null;
+    card.append(element('h4', 'deposit-label', presentation?.exceedsBlock ? 'Total de giros necessários' : 'Último valor salvo'));
     if (record) {
       const value = resultFor(record);
       const output = element('p', 'deposit-value', value);
       if (value.length > 9) output.classList.add('compact');
       card.append(output);
+      if (presentation.exceedsBlock) {
+        const plan = element('div', 'saved-roll-plan');
+        plan.append(element('span', 'roll-badge', 'Mais de 1000 giros'));
+        plan.append(element('span', '', presentation.breakdown));
+        plan.append(element('strong', '', presentation.instruction));
+        card.append(plan);
+      }
       card.append(element('p', 'deposit-metadata', `Inicial ${calculator.formatInput(record.initial)} · Perfil ${calculator.formatInput(record.x)} · ÷ ${calculator.formatInput(record.divisor)}`));
       card.append(element('p', 'deposit-time', timeFormatter.format(new Date(record.savedAt))));
     } else {
@@ -137,12 +145,16 @@
     screens.forEach((record, index) => {
       if (record) filledScreens++;
       const value = record ? resultFor(record) : '—';
-      const text = record ? `Tela ${index + 1} · ${value}` : `Tela ${index + 1}`;
+      const presentation = record ? calculator.getPresentation(record) : null;
+      const text = record ? `Tela ${index + 1} · ${value}${presentation.exceedsBlock ? ' giros' : ''}` : `Tela ${index + 1}`;
       target.options[index].textContent = text;
       dialogTarget.options[index].textContent = text;
       const button = screenGrid.children[index];
       button.setAttribute('aria-pressed', String(index === selectedScreen));
-      button.setAttribute('aria-label', `Tela ${index + 1}, ${record ? `valor salvo ${value}` : 'nenhum valor salvo'}`);
+      const description = presentation?.exceedsBlock ? `${value} giros necessários; ${presentation.breakdown}; ${presentation.instruction}` : `valor salvo ${value}`;
+      button.setAttribute('aria-label', `Tela ${index + 1}, ${record ? description : 'nenhum valor salvo'}`);
+      button.title = record ? description : 'Nenhum valor salvo';
+      button.classList.toggle('over-limit', Boolean(presentation?.exceedsBlock));
       button.querySelector('.screen-value').textContent = value;
     });
     target.value = String(selectedScreen); dialogTarget.value = String(selectedScreen);

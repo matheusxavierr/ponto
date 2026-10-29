@@ -20,7 +20,13 @@ Onde precisa parar = Z - 1000
 
 Aceita valores positivos, negativos e decimais com vírgula ou ponto, sem separador de milhar. A fórmula mantém o sinal e a precisão entre as etapas. Os valores intermediários são exibidos com duas casas decimais.
 
-O resultado final, o campo PARADA e o botão Copiar mostram apenas o valor absoluto inteiro, cortando as casas decimais sem arredondar. Essa formatação não altera o cálculo original.
+Até 1000 giros necessários (Z), o resultado final, o campo PARADA e o botão Copiar continuam exibindo o valor absoluto inteiro de `Z - 1000`, sem casas decimais. O número indica onde parar o contador decrescente de um bloco de 1000.
+
+Quando Z ultrapassa 1000, o resultado principal passa a mostrar o **total de giros necessários**, com um aviso **Mais de 1000**, a divisão em blocos e a parada no contador do último bloco. O botão Copiar copia esse total, e a terceira etapa passa a identificar os giros **EXTRA**, além do primeiro bloco. A fórmula original permanece com a precisão completa.
+
+Exemplo: B = 630, X = 200 e divisor 0,4 produzem Z = 1075. A calculadora mostra **1075**, **1000 + 75 giros** e **Último bloco: parar em 925**. Para 2000 giros, mostra dois blocos completos e contador final em 0; para 2500, dois blocos completos mais 500 e parada em 500.
+
+O plano usa giros inteiros: se o total necessário tiver fração, é considerado o giro inteiro seguinte para completar a meta. Por exemplo, 1075,5 exige 1076 giros, com parada em 924 no último bloco. Pequenos resíduos de ponto flutuante em números inteiros são normalizados apenas na apresentação. Os registros das telas, inclusive os antigos, exibem a mesma interpretação do cálculo atual.
 
 Exemplos com B = 600 e X = 300:
 

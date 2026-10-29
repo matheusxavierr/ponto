@@ -8,9 +8,9 @@
     <meta name="description" content="Informe o valor do seu perfil e calcule onde precisa parar. Uma calculadora simples com todas as etapas da fórmula.">
     <title>Ponto — Calculadora de perfil</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20261029-single">
-    <script src="script.js?v=20261029-single" defer></script>
-    <script src="workspace.js?v=20261029-single" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261029-rolls">
+    <script src="script.js?v=20261029-rolls" defer></script>
+    <script src="workspace.js?v=20261029-rolls" defer></script>
   </head>
   <body>
     <div class="page" id="app-root">
@@ -67,11 +67,15 @@
           </form>
 
           <div class="result-panel" id="result-panel">
-            <div class="result-top"><span class="result-label"><span class="status-dot"></span> SEU RESULTADO</span><svg class="result-target" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m15 9 6-6m-5 0h5v5"/></svg></div>
+            <div class="result-top"><span class="result-label"><span class="status-dot"></span><span id="result-kind">SEU RESULTADO</span></span><svg class="result-target" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m15 9 6-6m-5 0h5v5"/></svg></div>
             <div class="result-content" role="status" aria-live="polite" aria-atomic="true">
-              <h2><span class="result-title-full">Onde precisa parar</span><span class="result-title-compact">Resultado</span></h2>
+              <h2><span class="result-title-full" id="result-title-full">Onde precisa parar</span><span class="result-title-compact" id="result-title-compact">Resultado</span></h2>
               <p class="result-number" id="result">—</p>
               <p class="result-hint" id="result-hint">Seu ponto de parada aparece aqui.</p>
+              <div class="roll-plan" id="roll-plan" hidden>
+                <div class="roll-plan-top"><span class="roll-badge">Mais de 1000</span><span id="roll-breakdown"></span></div>
+                <p class="roll-counter" id="roll-counter"></p>
+              </div>
             </div>
             <div class="result-bottom"><span class="precision-note">Sem sinal e sem decimais</span><button class="copy-button" id="copy" type="button" disabled aria-label="Copiar resultado"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span id="copy-label">Copiar</span></button></div>
             <div class="save-row">
@@ -89,7 +93,7 @@
           <ol class="steps">
             <li class="step"><div class="step-label"><span class="step-number">1</span> Subtrair o perfil</div><p class="step-equation"><span id="step-initial">600</span> − <span id="step-x">X</span></p><div class="step-bottom"><span>Y</span><output id="step-y">—</output></div></li>
             <li class="step"><div class="step-label"><span class="step-number">2</span><span>Dividir por <span id="divisor-label">0,9</span></span></div><p class="step-equation"><span id="step-y-equation">Y</span> ÷ <span id="step-divisor">0,9</span></p><div class="step-bottom"><span>Z</span><output id="step-z">—</output></div></li>
-            <li class="step step-final"><div class="step-label"><span class="step-number">3</span> Encontrar o ponto</div><p class="step-equation"><span id="step-z-equation">Z</span> − 1.000</p><div class="step-bottom"><span>PARADA</span><output id="step-final">—</output></div></li>
+            <li class="step step-final"><div class="step-label"><span class="step-number">3</span><span id="step-final-title">Encontrar o ponto</span></div><p class="step-equation"><span id="step-z-equation">Z</span> − 1.000</p><div class="step-bottom"><span id="step-result-label">PARADA</span><output id="step-final">—</output></div></li>
           </ol>
           <div class="formula"><span class="formula-label">A FÓRMULA</span><code>((<span id="formula-initial">600</span> − X) ÷ <span id="formula-divisor">0,9</span>) − 1000</code><span class="formula-note">X = valor no perfil</span></div>
         </section>

@@ -20,6 +20,7 @@ const resultFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 
 const inputFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
 let activeDivisor = 0.9;
 let currentResult = null;
+let currentPresentation = null;
 let feedbackTimer;
 
 function parseValue(value) {
@@ -46,6 +47,40 @@ function formatResult(value) {
   return resultFormatter.format(Math.trunc(Math.abs(value)));
 }
 
+function describeCalculation({ z, stop }) {
+  // Ignore tiny floating-point residue at exact integer boundaries.
+  const nearestInteger = Math.round(z);
+  const tolerance = Number.EPSILON * Math.max(1, Math.abs(z)) * 4;
+  const normalized = Math.abs(z - nearestInteger) <= tolerance ? nearestInteger : z;
+  const totalSpins = Math.max(0, Math.ceil(normalized));
+  const exceedsBlock = totalSpins > 1000;
+  const fullBlocks = Math.floor(totalSpins / 1000);
+  const extraSpins = totalSpins % 1000;
+  const finalCounter = extraSpins === 0 ? 0 : 1000 - extraSpins;
+  const blocksText = fullBlocks === 1 ? '1000' : `${resultFormatter.format(fullBlocks)} × 1000`;
+  return {
+    exceedsBlock,
+    value: exceedsBlock ? resultFormatter.format(totalSpins) : formatResult(stop),
+    totalSpins, fullBlocks, extraSpins, finalCounter,
+    breakdown: `${blocksText}${extraSpins ? ` + ${resultFormatter.format(extraSpins)}` : ''} giros`,
+    instruction: extraSpins ? `Último bloco: parar em ${resultFormatter.format(finalCounter)}` : 'Último bloco: deixar chegar a 0'
+  };
+}
+
+function renderPresentation(presentation) {
+  const exceeds = Boolean(presentation?.exceedsBlock);
+  appRoot.classList.toggle('has-roll-plan', exceeds);
+  byId('result-kind').textContent = exceeds ? 'TOTAL DE GIROS' : 'SEU RESULTADO';
+  byId('result-title-full').textContent = exceeds ? 'Giros necessários' : 'Onde precisa parar';
+  byId('result-title-compact').textContent = exceeds ? 'Total de giros' : 'Resultado';
+  byId('roll-plan').hidden = !exceeds;
+  byId('roll-breakdown').textContent = exceeds ? presentation.breakdown : '';
+  byId('roll-counter').textContent = exceeds ? presentation.instruction : '';
+  byId('step-final-title').textContent = exceeds ? 'Além do primeiro bloco' : 'Encontrar o ponto';
+  byId('step-result-label').textContent = exceeds ? 'EXTRA' : 'PARADA';
+  copyButton.setAttribute('aria-label', exceeds ? 'Copiar total de giros necessários' : 'Copiar resultado');
+}
+
 function clearCopyFeedback() {
   clearTimeout(feedbackTimer);
   copyLabel.textContent = 'Copiar';
@@ -66,6 +101,8 @@ function setError(message = '', field = profile) {
 
 function renderEmpty() {
   currentResult = null;
+  currentPresentation = null;
+  renderPresentation(null);
   resultElement.textContent = '—';
   resultElement.classList.remove('compact');
   resultHint.textContent = 'Seu ponto de parada aparece aqui.';
@@ -115,7 +152,9 @@ function update(showEmptyError = false) {
   }
   setError();
   currentResult = stop;
-  const resultText = formatResult(stop);
+  currentPresentation = describeCalculation({ z, stop });
+  renderPresentation(currentPresentation);
+  const resultText = currentPresentation.value;
   resultElement.textContent = resultText;
   resultElement.classList.toggle('compact', resultText.length > 12);
   resultHint.textContent = `Para o valor de perfil ${inputFormatter.format(x)}.`;
@@ -125,7 +164,7 @@ function update(showEmptyError = false) {
   byId('step-y-equation').textContent = format(y);
   byId('step-z').textContent = format(z);
   byId('step-z-equation').textContent = format(z);
-  byId('step-final').textContent = resultText;
+  byId('step-final').textContent = currentPresentation.exceedsBlock ? resultFormatter.format(currentPresentation.totalSpins - 1000) : resultText;
   appRoot.dispatchEvent(new Event('calculationchange'));
   return true;
 }
@@ -182,9 +221,9 @@ appRoot.querySelectorAll('[data-value]').forEach(button => {
 });
 
 copyButton.addEventListener('click', async () => {
-  if (currentResult === null) return;
-  const copiedValue = currentResult;
-  const text = formatResult(copiedValue);
+  if (currentPresentation === null) return;
+  const copiedPresentation = currentPresentation;
+  const text = copiedPresentation.value;
   const activeDocument = appRoot.ownerDocument;
   const activeWindow = activeDocument.defaultView;
   try {
@@ -206,11 +245,11 @@ copyButton.addEventListener('click', async () => {
       }
       if (!copied) throw new Error('Clipboard unavailable');
     }
-    if (currentResult !== copiedValue) return;
+    if (currentPresentation !== copiedPresentation) return;
     copyLabel.textContent = 'Copiado!';
-    copyStatus.textContent = `Resultado ${text} copiado.`;
+    copyStatus.textContent = copiedPresentation.exceedsBlock ? `Total de ${text} giros copiado.` : `Resultado ${text} copiado.`;
   } catch {
-    if (currentResult !== copiedValue) return;
+    if (currentPresentation !== copiedPresentation) return;
     copyLabel.textContent = 'Selecione o valor';
     copyStatus.textContent = 'Não foi possível copiar. Selecione o resultado e copie manualmente.';
   }
@@ -222,6 +261,9 @@ window.pontoCalculator = Object.freeze({
   root: appRoot,
   calculate,
   formatResult,
+  getPresentation(snapshot) {
+    return describeCalculation(calculate(snapshot.x, snapshot.divisor, snapshot.initial));
+  },
   formatInput: value => inputFormatter.format(value),
   getSnapshot() {
     if (currentResult === null) return null;
