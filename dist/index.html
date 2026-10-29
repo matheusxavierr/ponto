@@ -8,17 +8,21 @@
     <meta name="description" content="Informe o valor do seu perfil e calcule onde precisa parar. Uma calculadora simples com todas as etapas da fórmula.">
     <title>Ponto — Calculadora de perfil</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261029">
+    <script src="script.js?v=20261029" defer></script>
+    <script src="workspace.js?v=20261029" defer></script>
   </head>
   <body>
-    <div class="page">
+    <div class="page" id="app-root">
       <header class="header">
         <a class="brand" href="./" aria-label="Ponto, início">
           <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></svg></span>
           ponto<span class="brand-dot">.</span>
         </a>
-        <span class="header-note"><span class="status-dot"></span> Simples. Direto. Calculado.</span>
+        <div class="header-actions">
+          <button class="header-button" id="records-open" type="button" aria-haspopup="dialog">Telas salvas</button>
+          <button class="header-button" id="pip-toggle" type="button" aria-pressed="false" title="Abrir calculadora em uma janela flutuante"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3"/><rect x="11" y="11" width="8" height="7" rx="1"/></svg><span id="pip-label">Flutuar</span></button>
+        </div>
       </header>
 
       <main>
@@ -65,11 +69,17 @@
           <div class="result-panel" id="result-panel">
             <div class="result-top"><span class="result-label"><span class="status-dot"></span> SEU RESULTADO</span><svg class="result-target" aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m15 9 6-6m-5 0h5v5"/></svg></div>
             <div class="result-content" role="status" aria-live="polite" aria-atomic="true">
-              <h2>Onde precisa parar</h2>
+              <h2><span class="result-title-full">Onde precisa parar</span><span class="result-title-compact">Resultado</span></h2>
               <p class="result-number" id="result">—</p>
               <p class="result-hint" id="result-hint">Seu ponto de parada aparece aqui.</p>
             </div>
             <div class="result-bottom"><span class="precision-note">Sem sinal e sem decimais</span><button class="copy-button" id="copy" type="button" disabled aria-label="Copiar resultado"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span id="copy-label">Copiar</span></button></div>
+            <div class="save-row">
+              <label class="sr-only" for="target-screen">Tela para salvar o depósito</label>
+              <select id="target-screen" aria-label="Tela para salvar o depósito"></select>
+              <button class="save-button" id="save-deposit" type="button" disabled>Salvar 1º depósito</button>
+            </div>
+            <p class="save-feedback" id="save-feedback" role="status" aria-live="polite">Até 2 depósitos por tela.</p>
             <span class="sr-only" role="status" id="copy-status"></span>
           </div>
         </section>
@@ -87,6 +97,18 @@
       </main>
 
       <footer><span class="footer-brand">ponto.</span><span>Menos contas. Mais clareza.</span><span class="local-note"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> O cálculo acontece no seu navegador.</span></footer>
+
+      <dialog class="records-dialog" id="records-dialog" aria-labelledby="records-title" aria-describedby="records-description">
+        <div class="records-heading"><div><h2 id="records-title">Depósitos por tela</h2><p id="records-description">10 telas · 2 depósitos por tela · Salvos neste navegador.</p></div><button class="header-button" id="records-close" type="button" aria-label="Fechar telas salvas">Fechar</button></div>
+        <div class="screen-grid" id="screen-grid" role="group" aria-label="Selecione uma tela"></div>
+        <label class="sr-only" for="dialog-screen">Selecione uma tela</label>
+        <select class="dialog-screen" id="dialog-screen" aria-label="Selecione uma tela"></select>
+        <div class="deposits-heading"><h3 id="selected-screen-title">Tela 1</h3><span>Sem sinal e sem decimais</span></div>
+        <div class="deposit-cards" id="deposit-cards"></div>
+        <div class="records-total"><span>Total desta tela</span><output id="screen-total">0</output></div>
+        <div class="records-notice-row"><p class="records-notice" id="records-notice" role="status" aria-live="polite">Registros salvos neste navegador.</p><button class="text-button" id="undo-delete" type="button" hidden>Desfazer exclusão</button></div>
+      </dialog>
     </div>
+    <div class="pip-placeholder" id="pip-placeholder" hidden><div><h1>A calculadora está flutuando.</h1><p>Mantenha esta aba aberta. Você pode mover a janela flutuante pela barra de título.</p><button class="save-button" id="pip-return" type="button">Voltar para esta aba</button></div></div>
   </body>
 </html>

@@ -32,3 +32,19 @@ Exemplos com B = 600 e X = 300:
 | 0,8 | -625 | 625 |
 
 Os cálculos são feitos no navegador. A fonte é carregada pelo Google Fonts; sem conexão, a página utiliza uma fonte do sistema e continua funcionando.
+
+## Depósitos por tela
+
+Escolha **Tela 1** até **Tela 10** abaixo do resultado e clique em **Salvar 1º depósito**. Calcule outro valor e salve o segundo depósito da mesma tela. O primeiro registro é preservado; uma tela completa não aceita sobrescrita automática.
+
+Em **Telas salvas**, selecione uma tela para consultar seus dois depósitos e o total. Cada registro preserva o valor inicial, o perfil, o divisor e a data. **Carregar** restaura aquele cálculo; **Excluir** remove somente o depósito escolhido, com opção de desfazer. **Limpar** continua apagando apenas o perfil, sem excluir registros.
+
+Os registros ficam no armazenamento local deste navegador e deste endereço, sem conta ou sincronização entre dispositivos. Eles sobrevivem ao fechamento normal e ao recarregamento; apagar os dados do site também apaga os registros. Abas do mesmo endereço atualizam os registros entre si. Falhas de armazenamento são mostradas na tela, sem informar que um depósito foi salvo quando a gravação falha.
+
+## Janela flutuante
+
+O botão **Flutuar** usa a Document Picture-in-Picture API quando disponível no navegador, como Chrome e Edge no computador em HTTPS. A calculadora continua interativa, incluindo as abas, os valores iniciais e os registros. Arraste a janela pela barra de título e redimensione-a usando os controles do sistema.
+
+Mantenha a aba original aberta: a janela flutuante depende dela. **Voltar**, o controle nativo do navegador ou o fechamento da janela devolvem a mesma calculadora à aba, preservando o cálculo em andamento. A compatibilidade é detectada em tempo de execução; navegadores sem essa API recebem uma mensagem explicativa. Uma janela comum de `window.open()` não é usada como substituto, pois não garante ficar sobre as outras janelas.
+
+Referência: [Document Picture-in-Picture — Chrome for Developers](https://developer.chrome.com/docs/web-platform/document-picture-in-picture).

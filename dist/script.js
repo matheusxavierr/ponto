@@ -1,18 +1,20 @@
 'use strict';
 
-const form = document.getElementById('calculator-form');
-const profile = document.getElementById('profile');
-const initialValue = document.getElementById('initial-value');
-const initialWrap = document.getElementById('initial-wrap');
-const inputWrap = document.getElementById('input-wrap');
-const inputError = document.getElementById('input-error');
-const resultElement = document.getElementById('result');
-const resultHint = document.getElementById('result-hint');
-const copyButton = document.getElementById('copy');
-const copyLabel = document.getElementById('copy-label');
-const copyStatus = document.getElementById('copy-status');
-const formulaTabs = Array.from(document.querySelectorAll('[data-divisor]'));
-const formulaPanel = document.getElementById('formula-panel');
+const appRoot = document.getElementById('app-root');
+const byId = id => appRoot.querySelector(`#${id}`);
+const form = byId('calculator-form');
+const profile = byId('profile');
+const initialValue = byId('initial-value');
+const initialWrap = byId('initial-wrap');
+const inputWrap = byId('input-wrap');
+const inputError = byId('input-error');
+const resultElement = byId('result');
+const resultHint = byId('result-hint');
+const copyButton = byId('copy');
+const copyLabel = byId('copy-label');
+const copyStatus = byId('copy-status');
+const formulaTabs = Array.from(appRoot.querySelectorAll('[data-divisor]'));
+const formulaPanel = byId('formula-panel');
 const formatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const resultFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0, useGrouping: false });
 const inputFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
@@ -51,6 +53,7 @@ function clearCopyFeedback() {
 }
 
 function setError(message = '', field = profile) {
+  appRoot.classList.toggle('has-input-error', Boolean(message));
   inputError.textContent = message;
   inputError.hidden = !message;
   inputWrap.classList.toggle('invalid', Boolean(message) && field === profile);
@@ -67,10 +70,11 @@ function renderEmpty() {
   resultElement.classList.remove('compact');
   resultHint.textContent = 'Seu ponto de parada aparece aqui.';
   copyButton.disabled = true;
-  document.getElementById('step-x').textContent = 'X';
-  document.getElementById('step-y-equation').textContent = 'Y';
-  document.getElementById('step-z-equation').textContent = 'Z';
-  ['step-y', 'step-z', 'step-final'].forEach(id => document.getElementById(id).textContent = '—');
+  byId('step-x').textContent = 'X';
+  byId('step-y-equation').textContent = 'Y';
+  byId('step-z-equation').textContent = 'Z';
+  ['step-y', 'step-z', 'step-final'].forEach(id => byId(id).textContent = '—');
+  appRoot.dispatchEvent(new Event('calculationchange'));
 }
 
 function update(showEmptyError = false) {
@@ -79,7 +83,7 @@ function update(showEmptyError = false) {
   const initial = parseValue(initialText);
   const initialOperand = initial === null ? 'B' : (initial < 0 ? `(${inputFormatter.format(initial)})` : inputFormatter.format(initial));
   ['step-initial', 'formula-initial'].forEach(id => {
-    document.getElementById(id).textContent = initialOperand;
+    byId(id).textContent = initialOperand;
   });
   if (!initialText) {
     renderEmpty();
@@ -116,12 +120,13 @@ function update(showEmptyError = false) {
   resultElement.classList.toggle('compact', resultText.length > 12);
   resultHint.textContent = `Para o valor de perfil ${inputFormatter.format(x)}.`;
   copyButton.disabled = false;
-  document.getElementById('step-x').textContent = x < 0 ? `(${inputFormatter.format(x)})` : inputFormatter.format(x);
-  document.getElementById('step-y').textContent = format(y);
-  document.getElementById('step-y-equation').textContent = format(y);
-  document.getElementById('step-z').textContent = format(z);
-  document.getElementById('step-z-equation').textContent = format(z);
-  document.getElementById('step-final').textContent = resultText;
+  byId('step-x').textContent = x < 0 ? `(${inputFormatter.format(x)})` : inputFormatter.format(x);
+  byId('step-y').textContent = format(y);
+  byId('step-y-equation').textContent = format(y);
+  byId('step-z').textContent = format(z);
+  byId('step-z-equation').textContent = format(z);
+  byId('step-final').textContent = resultText;
+  appRoot.dispatchEvent(new Event('calculationchange'));
   return true;
 }
 
@@ -135,7 +140,7 @@ function selectFormula(selectedTab) {
   formulaPanel.setAttribute('aria-labelledby', selectedTab.id);
   const divisorText = inputFormatter.format(activeDivisor);
   ['divisor-label', 'step-divisor', 'formula-divisor'].forEach(id => {
-    document.getElementById(id).textContent = divisorText;
+    byId(id).textContent = divisorText;
   });
   update();
 }
@@ -168,7 +173,7 @@ form.addEventListener('reset', event => {
   update();
   profile.focus();
 });
-document.querySelectorAll('[data-value]').forEach(button => {
+appRoot.querySelectorAll('[data-value]').forEach(button => {
   button.addEventListener('click', () => {
     profile.value = button.dataset.value;
     update();
@@ -180,19 +185,21 @@ copyButton.addEventListener('click', async () => {
   if (currentResult === null) return;
   const copiedValue = currentResult;
   const text = formatResult(copiedValue);
+  const activeDocument = appRoot.ownerDocument;
+  const activeWindow = activeDocument.defaultView;
   try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
+    if (activeWindow.navigator.clipboard && activeWindow.isSecureContext) {
+      await activeWindow.navigator.clipboard.writeText(text);
     } else {
-      const temporary = document.createElement('textarea');
+      const temporary = activeDocument.createElement('textarea');
       temporary.value = text;
       temporary.setAttribute('readonly', '');
       temporary.style.cssText = 'position:fixed;left:-9999px;top:0;';
-      document.body.appendChild(temporary);
+      activeDocument.body.appendChild(temporary);
       let copied = false;
       try {
         temporary.select();
-        copied = document.execCommand('copy');
+        copied = activeDocument.execCommand('copy');
       } finally {
         temporary.remove();
         copyButton.focus();
@@ -209,4 +216,23 @@ copyButton.addEventListener('click', async () => {
   }
   clearTimeout(feedbackTimer);
   feedbackTimer = setTimeout(clearCopyFeedback, 2500);
+});
+
+window.pontoCalculator = Object.freeze({
+  root: appRoot,
+  calculate,
+  formatResult,
+  formatInput: value => inputFormatter.format(value),
+  getSnapshot() {
+    if (currentResult === null) return null;
+    return { initial: parseValue(initialValue.value), x: parseValue(profile.value), divisor: activeDivisor };
+  },
+  restoreSnapshot(snapshot) {
+    const tab = formulaTabs.find(item => Number(item.dataset.divisor) === snapshot.divisor);
+    if (!tab || !Number.isFinite(snapshot.initial) || !Number.isFinite(snapshot.x)) return false;
+    initialValue.value = String(snapshot.initial).replace('.', ',');
+    profile.value = String(snapshot.x).replace('.', ',');
+    selectFormula(tab);
+    return true;
+  }
 });
