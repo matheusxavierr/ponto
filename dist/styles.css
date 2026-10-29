@@ -96,14 +96,14 @@ input::placeholder{color:#96a7bd;font-weight:400;font-size:20px;letter-spacing:-
 .records-heading p{font-size:11px;line-height:1.4;color:var(--muted);margin:6px 0 0}
 .screen-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .screen-choice{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;background:var(--surface);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-size:12px}
-.screen-count{font-size:10px;color:var(--muted)}
+.screen-value{font-size:12px;font-weight:650;color:var(--accent);max-width:100%;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .screen-choice[aria-pressed="true"]{background:var(--orange-tint);border-color:var(--accent);color:var(--accent)}
 .screen-choice:hover{border-color:var(--accent)}
 .dialog-screen{display:none;width:100%;font-size:12px}
 .deposits-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .deposits-heading h3{font-size:14px;margin:0}
 .deposits-heading>span{font-size:11px;color:var(--muted)}
-.deposit-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
+.deposit-cards{display:grid;grid-template-columns:minmax(0,1fr);min-width:0}
 .deposit-card{display:flex;flex-direction:column;gap:8px;min-width:0;padding:14px;border:1px solid var(--line);background:var(--surface);border-radius:10px}
 .deposit-label{font-size:12px;color:var(--muted);margin:0;font-weight:500}
 .deposit-value{font-family:'Manrope',var(--font);font-size:30px;line-height:1.1;color:var(--accent);font-weight:700;margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
@@ -111,17 +111,11 @@ input::placeholder{color:#96a7bd;font-weight:400;font-size:20px;letter-spacing:-
 .deposit-metadata{font-size:11px;line-height:1.5;color:var(--muted);margin:0;overflow-wrap:anywhere}
 .deposit-time{font-size:10px;color:var(--muted);margin:0}
 .deposit-empty{font-size:13px;color:var(--muted);margin:12px 0}
-.deposit-actions{display:flex;gap:6px;margin-top:auto;flex-wrap:wrap}
 .small-action{font-size:11px;line-height:16px;border:1px solid #506177;border-radius:6px;padding:5px 7px;background:var(--field);color:var(--ink)}
 .small-action:hover{border-color:var(--accent)}
-.small-action.danger{color:#ffb5b5}
 .small-action.primary{background:var(--orange-tint);border-color:var(--warm-line);color:var(--accent);margin-top:auto}
 .small-action:disabled{opacity:.45;cursor:default}
-.records-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
-.records-total output{font-size:24px;color:var(--ink);font-weight:650;text-align:right;overflow-wrap:anywhere;min-width:0}
-.records-notice-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
 .records-notice{font-size:11px;line-height:1.4;color:var(--muted);margin:0;overflow-wrap:anywhere}
-.records-notice-row button{font-size:11px;flex-shrink:0}
 .pip-placeholder{height:100vh;height:100dvh;display:grid;place-items:center;text-align:center;padding:24px}
 .pip-placeholder>div{max-width:480px}
 .pip-placeholder h1{font-size:28px}
@@ -212,7 +206,6 @@ footer{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line)
   .records-dialog{padding:14px}
   .deposit-card{padding:10px}
   .deposit-value{font-size:24px}
-  .deposit-actions{gap:5px}
   .small-action{padding:5px 6px}
   .records-heading h2{font-size:16px}
   .deposits-heading>span{font-size:10px}
@@ -247,7 +240,6 @@ footer{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line)
   .deposit-metadata{display:none}
   .deposit-value{font-size:24px}
   .deposit-card{gap:6px;padding:10px}
-  .records-total{padding-top:6px}
 }
 @media(max-height:600px) and (max-width:580px){
   .breakdown{display:none}
@@ -277,10 +269,8 @@ footer{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line)
   .records-heading p,.deposits-heading{display:none}
   .records-dialog{padding:10px}
   .records-dialog[open]{gap:6px}
-  .records-total output{font-size:20px}
   .deposit-empty{margin:4px 0;font-size:12px}
   .records-notice{font-size:10px;line-height:1.3}
-  .records-notice-row .text-button{font-size:10px}
 }
 body.pip-mode .page{grid-template-rows:34px minmax(0,1fr);gap:8px;padding:10px 12px}
 body.pip-mode .intro,body.pip-mode footer{display:none}

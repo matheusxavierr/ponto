@@ -35,9 +35,11 @@ Os cálculos são feitos no navegador. A fonte é carregada pelo Google Fonts; s
 
 ## Depósitos por tela
 
-Escolha **Tela 1** até **Tela 10** abaixo do resultado e clique em **Salvar 1º depósito**. Calcule outro valor e salve o segundo depósito da mesma tela. O primeiro registro é preservado; uma tela completa não aceita sobrescrita automática.
+Escolha **Tela 1** até **Tela 10** abaixo do resultado e clique em **Salvar depósito**. Cada tela guarda somente o último valor: salvar novamente substitui o anterior imediatamente, sem limite de salvamentos e sem confirmação extra.
 
-Em **Telas salvas**, selecione uma tela para consultar seus dois depósitos e o total. Cada registro preserva o valor inicial, o perfil, o divisor e a data. **Carregar** restaura aquele cálculo; **Excluir** remove somente o depósito escolhido, com opção de desfazer. **Limpar** continua apagando apenas o perfil, sem excluir registros.
+Em **Telas salvas**, as 10 telas mostram seus valores mais recentes. Ao selecionar uma tela, você vê o valor salvo com os dados do cálculo e a data, e também pode salvar o resultado atual diretamente nela. Não há ações de carregar ou excluir registros. **Limpar** continua apagando apenas o perfil, sem modificar os valores salvos.
+
+Registros da versão anterior são lidos usando o cálculo mais recente de cada tela. No próximo salvamento, os 10 valores passam para o formato de um único registro por tela; os dados antigos permanecem guardados como cópia de compatibilidade, sem aparecer como depósitos extras na interface.
 
 Os registros ficam no armazenamento local deste navegador e deste endereço, sem conta ou sincronização entre dispositivos. Eles sobrevivem ao fechamento normal e ao recarregamento; apagar os dados do site também apaga os registros. Abas do mesmo endereço atualizam os registros entre si. Falhas de armazenamento são mostradas na tela, sem informar que um depósito foi salvo quando a gravação falha.
 

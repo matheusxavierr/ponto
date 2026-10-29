@@ -4,7 +4,8 @@
   const calculator = window.pontoCalculator;
   const app = calculator.root;
   const find = id => app.querySelector(`#${id}`);
-  const storageKey = 'ponto.deposits.v1';
+  const storageKey = 'ponto.deposits.v2';
+  const legacyStorageKey = 'ponto.deposits.v1';
   const divisors = [0.9, 0.4, 0.45, 0.8];
   const dialog = find('records-dialog');
   const target = find('target-screen');
@@ -12,7 +13,6 @@
   const screenGrid = find('screen-grid');
   const cards = find('deposit-cards');
   const saveButton = find('save-deposit');
-  const undoButton = find('undo-delete');
   const pipButton = find('pip-toggle');
   const pipLabel = find('pip-label');
   const mainDocument = document;
@@ -20,9 +20,8 @@
   const returnButton = mainDocument.getElementById('pip-return');
   const timeFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   let selectedScreen = 0;
-  let screens = Array.from({ length: 10 }, () => [null, null]);
+  let screens = Array(10).fill(null);
   let storageReadable = true;
-  let removedDeposit = null;
   let floatingWindow = null;
   let opening = false;
 
@@ -53,12 +52,21 @@
 
   function readScreens() {
     const value = window.localStorage.getItem(storageKey);
-    if (value === null) return Array.from({ length: 10 }, () => [null, null]);
-    const stored = JSON.parse(value);
-    if (stored.version !== 1 || !Array.isArray(stored.screens) || stored.screens.length !== 10) throw new Error('Invalid storage');
-    return stored.screens.map(slots => {
+    if (value !== null) {
+      const stored = JSON.parse(value);
+      if (stored.version !== 2 || !Array.isArray(stored.screens) || stored.screens.length !== 10) throw new Error('Invalid storage');
+      return stored.screens.map(validatedRecord);
+    }
+    // Retain the newest previous result for each screen without modifying the legacy backup.
+    const legacyValue = window.localStorage.getItem(legacyStorageKey);
+    if (legacyValue === null) return Array(10).fill(null);
+    const legacy = JSON.parse(legacyValue);
+    if (legacy.version !== 1 || !Array.isArray(legacy.screens) || legacy.screens.length !== 10) throw new Error('Invalid storage');
+    return legacy.screens.map(slots => {
       if (!Array.isArray(slots) || slots.length !== 2) throw new Error('Invalid screen');
-      return slots.map(validatedRecord);
+      return slots.map(validatedRecord).reduce((latest, record) => {
+        return record && (!latest || record.savedAt >= latest.savedAt) ? record : latest;
+      }, null);
     });
   }
 
@@ -76,7 +84,7 @@
 
   function persist(nextScreens) {
     try {
-      window.localStorage.setItem(storageKey, JSON.stringify({ version: 1, screens: nextScreens }));
+      window.localStorage.setItem(storageKey, JSON.stringify({ version: 2, screens: nextScreens }));
       screens = nextScreens;
       render();
       return true;
@@ -92,69 +100,54 @@
 
   function destinationHint() {
     if (!storageReadable) return;
-    notify(screens[selectedScreen].every(Boolean) ? 'Dois depósitos salvos nesta tela.' : 'Até 2 depósitos por tela.');
+    notify('Novo valor substitui o anterior.');
   }
 
   function renderSaveControls() {
     const snapshot = calculator.getSnapshot();
-    const nextSlot = screens[selectedScreen].findIndex(record => record === null);
-    saveButton.disabled = !storageReadable || !snapshot || nextSlot === -1;
-    saveButton.textContent = nextSlot === -1 ? 'Tela completa' : `Salvar ${nextSlot + 1}º depósito`;
-    saveButton.setAttribute('aria-label', nextSlot === -1 ? `Tela ${selectedScreen + 1} completa` : `Salvar depósito ${nextSlot + 1} na Tela ${selectedScreen + 1}`);
-    cards.querySelectorAll('[data-save-slot]').forEach(button => { button.disabled = !storageReadable || !snapshot; });
+    saveButton.disabled = !storageReadable || !snapshot;
+    saveButton.setAttribute('aria-label', `Salvar novo valor na Tela ${selectedScreen + 1}`);
+    cards.querySelectorAll('[data-save-current]').forEach(button => { button.disabled = !storageReadable || !snapshot; });
   }
 
   function renderCards() {
     cards.replaceChildren();
-    const values = [];
-    screens[selectedScreen].forEach((record, slot) => {
-      const card = element('article', 'deposit-card');
-      card.append(element('h4', 'deposit-label', `Depósito ${slot + 1}`));
-      if (record) {
-        const value = resultFor(record);
-        values.push(BigInt(value));
-        const output = element('p', 'deposit-value', value);
-        if (value.length > 9) output.classList.add('compact');
-        card.append(output);
-        card.append(element('p', 'deposit-metadata', `Inicial ${calculator.formatInput(record.initial)} · Perfil ${calculator.formatInput(record.x)} · ÷ ${calculator.formatInput(record.divisor)}`));
-        card.append(element('p', 'deposit-time', timeFormatter.format(new Date(record.savedAt))));
-        const actions = element('div', 'deposit-actions');
-        const load = element('button', 'small-action', 'Carregar');
-        load.type = 'button'; load.dataset.loadSlot = slot; load.dataset.recordId = record.id;
-        load.setAttribute('aria-label', `Carregar cálculo do depósito ${slot + 1} da Tela ${selectedScreen + 1}`);
-        const remove = element('button', 'small-action danger', 'Excluir');
-        remove.type = 'button'; remove.dataset.deleteSlot = slot; remove.dataset.recordId = record.id;
-        remove.setAttribute('aria-label', `Excluir depósito ${slot + 1} da Tela ${selectedScreen + 1}`);
-        actions.append(load, remove); card.append(actions);
-      } else {
-        card.append(element('p', 'deposit-empty', 'Ainda não salvo'));
-        const save = element('button', 'small-action primary', 'Salvar cálculo atual');
-        save.type = 'button'; save.dataset.saveSlot = slot;
-        save.setAttribute('aria-label', `Salvar cálculo atual como depósito ${slot + 1} da Tela ${selectedScreen + 1}`);
-        card.append(save);
-      }
-      cards.append(card);
-    });
-    find('screen-total').textContent = values.reduce((total, value) => total + value, 0n).toString();
+    const record = screens[selectedScreen];
+    const card = element('article', 'deposit-card');
+    card.append(element('h4', 'deposit-label', 'Último valor salvo'));
+    if (record) {
+      const value = resultFor(record);
+      const output = element('p', 'deposit-value', value);
+      if (value.length > 9) output.classList.add('compact');
+      card.append(output);
+      card.append(element('p', 'deposit-metadata', `Inicial ${calculator.formatInput(record.initial)} · Perfil ${calculator.formatInput(record.x)} · ÷ ${calculator.formatInput(record.divisor)}`));
+      card.append(element('p', 'deposit-time', timeFormatter.format(new Date(record.savedAt))));
+    } else {
+      card.append(element('p', 'deposit-empty', 'Ainda não salvo'));
+    }
+    const save = element('button', 'small-action primary', 'Salvar resultado atual nesta tela');
+    save.type = 'button'; save.dataset.saveCurrent = '';
+    save.setAttribute('aria-label', `Salvar novo valor na Tela ${selectedScreen + 1}`);
+    card.append(save);
+    cards.append(card);
   }
 
   function render() {
     let filledScreens = 0;
-    screens.forEach((slots, index) => {
-      const count = slots.filter(Boolean).length;
-      if (count) filledScreens++;
-      const text = `Tela ${index + 1} (${count}/2)`;
+    screens.forEach((record, index) => {
+      if (record) filledScreens++;
+      const value = record ? resultFor(record) : '—';
+      const text = record ? `Tela ${index + 1} · ${value}` : `Tela ${index + 1}`;
       target.options[index].textContent = text;
       dialogTarget.options[index].textContent = text;
       const button = screenGrid.children[index];
       button.setAttribute('aria-pressed', String(index === selectedScreen));
-      button.setAttribute('aria-label', `Tela ${index + 1}, ${count} de 2 depósitos salvos`);
-      button.querySelector('.screen-count').textContent = `${count}/2`;
+      button.setAttribute('aria-label', `Tela ${index + 1}, ${record ? `valor salvo ${value}` : 'nenhum valor salvo'}`);
+      button.querySelector('.screen-value').textContent = value;
     });
     target.value = String(selectedScreen); dialogTarget.value = String(selectedScreen);
     find('records-open').setAttribute('aria-label', `Abrir telas salvas, ${filledScreens} de 10 telas com registros`);
     find('selected-screen-title').textContent = `Tela ${selectedScreen + 1}`;
-    undoButton.hidden = removedDeposit === null || Boolean(screens[removedDeposit.screen][removedDeposit.slot]);
     renderCards(); renderSaveControls();
   }
 
@@ -164,30 +157,26 @@
     render(); destinationHint();
   }
 
-  function saveDeposit(slot) {
+  function saveDeposit() {
     const snapshot = calculator.getSnapshot();
     if (!snapshot) { notify('Calcule um valor válido antes de salvar.', true); return; }
     if (!refreshStorage()) { renderSaveControls(); return; }
-    const destination = slot === undefined ? screens[selectedScreen].findIndex(record => record === null) : slot;
-    if (destination < 0 || screens[selectedScreen][destination]) {
-      render(); notify('Esse espaço já está preenchido. Use o outro depósito ou exclua o registro anterior.', true); return;
-    }
-    const next = screens.map(slots => slots.slice());
-    next[selectedScreen][destination] = { ...snapshot, id: window.crypto.randomUUID(), savedAt: Date.now() };
+    const next = screens.slice();
+    next[selectedScreen] = { ...snapshot, id: window.crypto.randomUUID(), savedAt: Date.now() };
     if (persist(next)) {
-      notify(`Depósito ${destination + 1} salvo na Tela ${selectedScreen + 1}.`);
-      if (dialog.open) cards.querySelector(`[data-load-slot="${destination}"]`)?.focus();
+      notify(`Valor ${resultFor(screens[selectedScreen])} salvo na Tela ${selectedScreen + 1}.`);
+      if (dialog.open) cards.querySelector('[data-save-current]')?.focus();
     }
   }
 
   for (let index = 0; index < 10; index++) {
     for (const select of [target, dialogTarget]) {
-      const option = element('option', '', `Tela ${index + 1} (0/2)`);
+      const option = element('option', '', `Tela ${index + 1}`);
       option.value = String(index); select.append(option);
     }
     const button = element('button', 'screen-choice');
     button.type = 'button'; button.dataset.screen = index;
-    button.append(element('span', '', `Tela ${index + 1}`), element('span', 'screen-count', '0/2'));
+    button.append(element('span', '', `Tela ${index + 1}`), element('span', 'screen-value', '—'));
     screenGrid.append(button);
   }
 
@@ -203,45 +192,11 @@
   });
   find('records-close').addEventListener('click', () => dialog.close());
   cards.addEventListener('click', event => {
-    const button = event.target.closest('button');
-    if (!button) return;
-    if (button.dataset.saveSlot !== undefined) { saveDeposit(Number(button.dataset.saveSlot)); return; }
-    if (button.dataset.loadSlot !== undefined) {
-      if (!refreshStorage()) return;
-      const record = screens[selectedScreen][Number(button.dataset.loadSlot)];
-      if (record?.id !== button.dataset.recordId) { render(); notify('Esse registro mudou em outra aba. Selecione-o novamente.', true); return; }
-      if (record && calculator.restoreSnapshot(record)) { dialog.close(); notify(`Cálculo da Tela ${selectedScreen + 1} carregado.`); }
-      return;
-    }
-    if (button.dataset.deleteSlot !== undefined) {
-      if (!refreshStorage()) return;
-      const slot = Number(button.dataset.deleteSlot);
-      const record = screens[selectedScreen][slot];
-      if (record?.id !== button.dataset.recordId) { render(); notify('Esse registro mudou em outra aba. Selecione-o novamente.', true); return; }
-      const next = screens.map(slots => slots.slice());
-      next[selectedScreen][slot] = null;
-      if (persist(next)) {
-        removedDeposit = { record, screen: selectedScreen, slot };
-        undoButton.hidden = false;
-        undoButton.focus();
-        notify(`Tela ${selectedScreen + 1}: depósito ${slot + 1} excluído.`);
-      }
-    }
-  });
-  undoButton.addEventListener('click', () => {
-    if (!removedDeposit || !refreshStorage()) return;
-    const { record, screen, slot } = removedDeposit;
-    if (screens[screen][slot]) { notify('O espaço já foi preenchido e não pode ser substituído ao desfazer.', true); return; }
-    const next = screens.map(slots => slots.slice()); next[screen][slot] = record;
-    if (persist(next)) {
-      removedDeposit = null; undoButton.hidden = true;
-      screenGrid.querySelector(`[data-screen="${selectedScreen}"]`)?.focus();
-      notify(`Depósito ${slot + 1} da Tela ${screen + 1} restaurado.`);
-    }
+    if (event.target.closest('[data-save-current]')) saveDeposit();
   });
   app.addEventListener('calculationchange', () => { renderSaveControls(); destinationHint(); });
   window.addEventListener('storage', event => {
-    if (event.key === storageKey || event.key === null) { refreshStorage(); render(); destinationHint(); }
+    if (event.key === storageKey || event.key === legacyStorageKey || event.key === null) { refreshStorage(); render(); destinationHint(); }
   });
 
   function restoreFromFloating() {
