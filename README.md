@@ -41,9 +41,11 @@ Os cálculos são feitos no navegador. A fonte é carregada pelo Google Fonts; s
 
 ## Depósitos por tela
 
-Escolha **Tela 1** até **Tela 10** abaixo do resultado e clique em **Salvar depósito**. Cada tela guarda somente o último valor: salvar novamente substitui o anterior imediatamente, sem limite de salvamentos e sem confirmação extra.
+Escolha **Tela 1** até **Tela 10** abaixo do resultado e clique em **Salvar depósito**. Cada tela guarda somente o último valor: salvar novamente substitui o anterior imediatamente, sem limite de salvamentos e sem confirmação extra. Após salvar com sucesso, o seletor avança para a tela seguinte; da Tela 10, volta à Tela 1. O cálculo atual permanece disponível.
 
-Em **Telas salvas**, as 10 telas mostram seus valores mais recentes. Ao selecionar uma tela, você vê o valor salvo com os dados do cálculo e a data, e também pode salvar o resultado atual diretamente nela. Não há ações de carregar ou excluir registros. **Limpar** continua apagando apenas o perfil, sem modificar os valores salvos.
+Em **Telas salvas**, as 10 telas mostram seus valores mais recentes. Ao selecionar uma tela, você vê o valor salvo com os dados do cálculo e a data, e também pode salvar o resultado atual diretamente nela. **Marcar OK** substitui a exibição do número por **✓ OK** e retira a tela da fila. **Reabrir tela** recupera a exibição do valor e a devolve à fila. **Excluir valor** esvazia somente a tela selecionada. Salvar novamente em uma tela OK substitui o cálculo e a deixa pendente. Essas ações persistem ao recarregar. **Limpar** continua apagando apenas o perfil, sem modificar os valores salvos.
+
+A aba **Fila de parada** do modal lista apenas telas pendentes, em ordem crescente dos giros totais necessários; empates seguem o número da tela. Para cálculos de até 1000 giros, isso equivale a priorizar o maior contador de parada. Cálculos que exigem vários blocos são ordenados pelo total de giros, não pelo contador do último bloco. Cada item permite abrir a tela correspondente para marcar OK ou excluir. Em janelas pequenas, a fila exibe cinco itens por página, com botões para avançar e voltar, sem rolagem. A fila é uma previsão considerando o mesmo início dos cálculos; não lê contadores ao vivo nem considera velocidades diferentes ou giros já executados.
 
 Registros da versão anterior são lidos usando o cálculo mais recente de cada tela. No próximo salvamento, os 10 valores passam para o formato de um único registro por tela; os dados antigos permanecem guardados como cópia de compatibilidade, sem aparecer como depósitos extras na interface.
 
@@ -56,3 +58,13 @@ O botão **Flutuar** usa a Document Picture-in-Picture API quando disponível no
 Mantenha a aba original aberta: a janela flutuante depende dela. **Voltar**, o controle nativo do navegador ou o fechamento da janela devolvem a mesma calculadora à aba, preservando o cálculo em andamento. A compatibilidade é detectada em tempo de execução; navegadores sem essa API recebem uma mensagem explicativa. Uma janela comum de `window.open()` não é usada como substituto, pois não garante ficar sobre as outras janelas.
 
 Referência: [Document Picture-in-Picture — Chrome for Developers](https://developer.chrome.com/docs/web-platform/document-picture-in-picture).
+
+## Estudo de monitor de rolls (não implementado)
+
+É tecnicamente possível capturar o monitor escolhido pelo usuário com `getDisplayMedia()` e aplicar OCR local apenas às dez regiões dos contadores, comparando as leituras com os alvos salvos. O usuário precisaria iniciar o compartilhamento e selecionar o monitor em cada sessão. Uma captura direta, com janelas visíveis e layout fixo, é mais adequada que uma foto inclinada do monitor.
+
+Uma implementação futura precisaria associar cada região à Tela 1–10, calibrar após mudanças de posição/zoom, validar leituras ao longo de vários quadros, tratar números ocultos e distinguir reinícios de blocos de 1000. Alvos acima de 1000 exigem acompanhar o bloco atual e o total realizado. Caso a leitura fique incerta ou a captura termine, deve avisar que o acompanhamento foi perdido, sem marcar a tela como OK automaticamente.
+
+O primeiro protótipo sugerido é um monitor de alertas visuais e sonoros, com a parada manual no jogo. A viabilidade das APIs está confirmada, mas a precisão, a latência e o consumo de CPU com dez contadores ainda precisam ser medidos com uma captura real dos jogos em movimento. Não há monitoramento, captura de tela ou OCR ativos nesta versão.
+
+Referências: [Screen Capture API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia), [Tesseract.js — repositório oficial](https://github.com/naptha/tesseract.js).

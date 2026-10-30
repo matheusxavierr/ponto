@@ -12,6 +12,8 @@
   const dialogTarget = find('dialog-screen');
   const screenGrid = find('screen-grid');
   const cards = find('deposit-cards');
+  const queue = find('stop-queue');
+  const viewTabs = [find('records-screens-tab'), find('records-queue-tab')];
   const saveButton = find('save-deposit');
   const pipButton = find('pip-toggle');
   const pipLabel = find('pip-label');
@@ -20,6 +22,7 @@
   const returnButton = mainDocument.getElementById('pip-return');
   const timeFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   let selectedScreen = 0;
+  let queuePage = 0;
   let screens = Array(10).fill(null);
   let storageReadable = true;
   let floatingWindow = null;
@@ -44,10 +47,11 @@
     if (record === null) return null;
     if (!record || typeof record.id !== 'string' || record.id.length > 100 ||
         !Number.isFinite(record.initial) || !Number.isFinite(record.x) || !divisors.includes(record.divisor) ||
-        !Number.isFinite(record.savedAt) || record.savedAt < 0 || record.savedAt > 8640000000000000) throw new Error('Invalid deposit');
+        !Number.isFinite(record.savedAt) || record.savedAt < 0 || record.savedAt > 8640000000000000 ||
+        (record.done !== undefined && typeof record.done !== 'boolean')) throw new Error('Invalid deposit');
     const { y, z, stop } = calculator.calculate(record.x, record.divisor, record.initial);
     if (![y, z, stop].every(Number.isFinite)) throw new Error('Invalid calculation');
-    return { id: record.id, initial: record.initial, x: record.x, divisor: record.divisor, savedAt: record.savedAt };
+    return { id: record.id, initial: record.initial, x: record.x, divisor: record.divisor, savedAt: record.savedAt, done: record.done === true };
   }
 
   function readScreens() {
@@ -108,6 +112,7 @@
     saveButton.disabled = !storageReadable || !snapshot;
     saveButton.setAttribute('aria-label', `Salvar novo valor na Tela ${selectedScreen + 1}`);
     cards.querySelectorAll('[data-save-current]').forEach(button => { button.disabled = !storageReadable || !snapshot; });
+    cards.querySelectorAll('[data-record-action]').forEach(button => { button.disabled = !storageReadable; });
   }
 
   function renderCards() {
@@ -115,13 +120,14 @@
     const record = screens[selectedScreen];
     const card = element('article', 'deposit-card');
     const presentation = record ? calculator.getPresentation(record) : null;
-    card.append(element('h4', 'deposit-label', presentation?.exceedsBlock ? 'Total de giros necessários' : 'Último valor salvo'));
+    card.classList.toggle('is-done', Boolean(record?.done));
+    card.append(element('h4', 'deposit-label', record?.done ? 'Tela concluída' : presentation?.exceedsBlock ? 'Total de giros necessários' : 'Último valor salvo'));
     if (record) {
       const value = resultFor(record);
-      const output = element('p', 'deposit-value', value);
+      const output = element('p', 'deposit-value', record.done ? '✓ OK' : value);
       if (value.length > 9) output.classList.add('compact');
       card.append(output);
-      if (presentation.exceedsBlock) {
+      if (presentation.exceedsBlock && !record.done) {
         const plan = element('div', 'saved-roll-plan');
         plan.append(element('span', 'roll-badge', 'Mais de 1000 giros'));
         plan.append(element('span', '', presentation.breakdown));
@@ -137,30 +143,73 @@
     save.type = 'button'; save.dataset.saveCurrent = '';
     save.setAttribute('aria-label', `Salvar novo valor na Tela ${selectedScreen + 1}`);
     card.append(save);
+    if (record) {
+      const actions = element('div', 'deposit-actions');
+      const done = element('button', 'small-action done-action', record.done ? 'Reabrir tela' : '✓ Marcar OK');
+      done.type = 'button'; done.dataset.recordAction = 'done'; done.dataset.recordId = record.id;
+      done.setAttribute('aria-label', `${record.done ? 'Reabrir' : 'Marcar como OK a'} Tela ${selectedScreen + 1}`);
+      const remove = element('button', 'small-action delete-action', 'Excluir valor');
+      remove.type = 'button'; remove.dataset.recordAction = 'delete'; remove.dataset.recordId = record.id;
+      remove.setAttribute('aria-label', `Excluir valor da Tela ${selectedScreen + 1}`);
+      actions.append(done, remove); card.append(actions);
+    }
     cards.append(card);
+  }
+
+  function renderQueue() {
+    const pending = screens.flatMap((record, index) => record && !record.done
+      ? [{ record, index, presentation: calculator.getPresentation(record) }] : []);
+    pending.sort((a, b) => a.presentation.totalSpins - b.presentation.totalSpins || a.index - b.index);
+    const view = app.ownerDocument.defaultView;
+    const pageSize = view.innerWidth <= 580 || view.innerHeight <= 620 ? 5 : 10;
+    const pageCount = Math.max(1, Math.ceil(pending.length / pageSize));
+    queuePage = Math.min(queuePage, pageCount - 1);
+    queue.replaceChildren();
+    pending.forEach(({ record, index, presentation }, position) => {
+      const item = element('li');
+      item.hidden = Math.floor(position / pageSize) !== queuePage;
+      const button = element('button', 'queue-choice');
+      button.type = 'button'; button.dataset.queueScreen = index;
+      button.append(element('span', 'queue-rank', String(position + 1)), element('span', 'queue-screen', `Tela ${index + 1}`));
+      const detail = presentation.exceedsBlock
+        ? `${presentation.value} giros`
+        : `Parar em ${resultFor(record)}`;
+      button.append(element('span', 'queue-stop', detail));
+      button.title = presentation.exceedsBlock ? `${presentation.breakdown}; ${presentation.instruction}` : detail;
+      button.setAttribute('aria-label', `${position + 1}ª: Tela ${index + 1}, ${detail}${presentation.exceedsBlock ? `; ${presentation.instruction}` : ''}. Ver tela.`);
+      item.append(button); queue.append(item);
+    });
+    find('queue-count').textContent = String(pending.length);
+    find('queue-empty').hidden = pending.length > 0;
+    queue.hidden = pending.length === 0;
+    find('queue-pagination').hidden = pageCount === 1;
+    find('queue-page').textContent = `${queuePage * pageSize + 1}–${Math.min((queuePage + 1) * pageSize, pending.length)} de ${pending.length}`;
+    find('queue-previous').disabled = queuePage === 0;
+    find('queue-next').disabled = queuePage + 1 === pageCount;
   }
 
   function render() {
     let filledScreens = 0;
     screens.forEach((record, index) => {
       if (record) filledScreens++;
-      const value = record ? resultFor(record) : '—';
+      const value = record?.done ? '✓ OK' : record ? resultFor(record) : '—';
       const presentation = record ? calculator.getPresentation(record) : null;
-      const text = record ? `Tela ${index + 1} · ${value}${presentation.exceedsBlock ? ' giros' : ''}` : `Tela ${index + 1}`;
+      const text = record ? `Tela ${index + 1} · ${value}${!record.done && presentation.exceedsBlock ? ' giros' : ''}` : `Tela ${index + 1}`;
       target.options[index].textContent = text;
       dialogTarget.options[index].textContent = text;
       const button = screenGrid.children[index];
       button.setAttribute('aria-pressed', String(index === selectedScreen));
-      const description = presentation?.exceedsBlock ? `${value} giros necessários; ${presentation.breakdown}; ${presentation.instruction}` : `valor salvo ${value}`;
+      const description = record?.done ? 'OK, tela concluída' : presentation?.exceedsBlock ? `${value} giros necessários; ${presentation.breakdown}; ${presentation.instruction}` : `valor salvo ${value}`;
       button.setAttribute('aria-label', `Tela ${index + 1}, ${record ? description : 'nenhum valor salvo'}`);
       button.title = record ? description : 'Nenhum valor salvo';
-      button.classList.toggle('over-limit', Boolean(presentation?.exceedsBlock));
+      button.classList.toggle('over-limit', Boolean(presentation?.exceedsBlock && !record.done));
+      button.classList.toggle('is-done', Boolean(record?.done));
       button.querySelector('.screen-value').textContent = value;
     });
     target.value = String(selectedScreen); dialogTarget.value = String(selectedScreen);
     find('records-open').setAttribute('aria-label', `Abrir telas salvas, ${filledScreens} de 10 telas com registros`);
     find('selected-screen-title').textContent = `Tela ${selectedScreen + 1}`;
-    renderCards(); renderSaveControls();
+    renderCards(); renderQueue(); renderSaveControls();
   }
 
   function selectScreen(index) {
@@ -174,11 +223,39 @@
     if (!snapshot) { notify('Calcule um valor válido antes de salvar.', true); return; }
     if (!refreshStorage()) { renderSaveControls(); return; }
     const next = screens.slice();
-    next[selectedScreen] = { ...snapshot, id: window.crypto.randomUUID(), savedAt: Date.now() };
+    const savedScreen = selectedScreen;
+    next[savedScreen] = { ...snapshot, id: window.crypto.randomUUID(), savedAt: Date.now(), done: false };
     if (persist(next)) {
-      notify(`Valor ${resultFor(screens[selectedScreen])} salvo na Tela ${selectedScreen + 1}.`);
+      selectedScreen = (savedScreen + 1) % 10;
+      render();
+      notify(`Tela ${savedScreen + 1}: ${resultFor(screens[savedScreen])} salvo. Próxima: Tela ${selectedScreen + 1}.`);
       if (dialog.open) cards.querySelector('[data-save-current]')?.focus();
     }
+  }
+
+  function updateRecord(action, expectedId) {
+    if (!refreshStorage()) { renderSaveControls(); return; }
+    const record = screens[selectedScreen];
+    if (!record || record.id !== expectedId) {
+      render(); notify('O valor desta tela mudou em outra aba. Confira antes de tentar novamente.', true); return;
+    }
+    const next = screens.slice();
+    next[selectedScreen] = action === 'delete' ? null : { ...record, done: !record.done };
+    if (persist(next)) {
+      notify(action === 'delete' ? `Valor da Tela ${selectedScreen + 1} excluído.`
+        : `Tela ${selectedScreen + 1} ${record.done ? 'reaberta e devolvida à fila' : 'marcada como OK'}.`);
+      (action === 'delete' ? cards.querySelector('[data-save-current]') : cards.querySelector('[data-record-action="done"]'))?.focus();
+    }
+  }
+
+  function selectView(tab, focus = false) {
+    viewTabs.forEach(item => {
+      const active = item === tab;
+      item.setAttribute('aria-selected', String(active));
+      item.tabIndex = active ? 0 : -1;
+      find(item.getAttribute('aria-controls')).hidden = !active;
+    });
+    if (focus) tab.focus();
   }
 
   for (let index = 0; index < 10; index++) {
@@ -205,7 +282,28 @@
   find('records-close').addEventListener('click', () => dialog.close());
   cards.addEventListener('click', event => {
     if (event.target.closest('[data-save-current]')) saveDeposit();
+    const action = event.target.closest('[data-record-action]');
+    if (action) updateRecord(action.dataset.recordAction, action.dataset.recordId);
   });
+  viewTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectView(tab));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      selectView(viewTabs[event.key === 'Home' ? 0 : event.key === 'End' ? 1 : 1 - index], true);
+    });
+  });
+  queue.addEventListener('click', event => {
+    const button = event.target.closest('[data-queue-screen]');
+    if (!button) return;
+    selectScreen(Number(button.dataset.queueScreen));
+    selectView(viewTabs[0]);
+    const gridButton = screenGrid.children[selectedScreen];
+    (gridButton.getClientRects().length ? gridButton : dialogTarget).focus();
+  });
+  find('queue-previous').addEventListener('click', () => { queuePage = Math.max(0, queuePage - 1); renderQueue(); });
+  find('queue-next').addEventListener('click', () => { queuePage++; renderQueue(); });
+  window.addEventListener('resize', renderQueue);
   app.addEventListener('calculationchange', () => { renderSaveControls(); destinationHint(); });
   window.addEventListener('storage', event => {
     if (event.key === storageKey || event.key === legacyStorageKey || event.key === null) { refreshStorage(); render(); destinationHint(); }
@@ -223,6 +321,7 @@
     pipLabel.textContent = 'Flutuar';
     pipButton.setAttribute('aria-pressed', 'false');
     pipButton.title = 'Abrir calculadora em uma janela flutuante';
+    renderQueue();
   }
 
   function returnToTab() {
@@ -254,6 +353,8 @@
       });
       child.document.body.classList.add('pip-mode');
       child.document.body.append(app);
+      child.addEventListener('resize', renderQueue);
+      renderQueue();
       placeholder.hidden = false;
       pipLabel.textContent = 'Voltar'; pipButton.setAttribute('aria-pressed', 'true');
       pipButton.title = 'Voltar à aba original';

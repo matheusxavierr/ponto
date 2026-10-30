@@ -8,9 +8,9 @@
     <meta name="description" content="Informe o valor do seu perfil e calcule onde precisa parar. Uma calculadora simples com todas as etapas da fórmula.">
     <title>Ponto — Calculadora de perfil</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css?v=20261029-rolls">
-    <script src="script.js?v=20261029-rolls" defer></script>
-    <script src="workspace.js?v=20261029-rolls" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261030-queue">
+    <script src="script.js?v=20261030-queue" defer></script>
+    <script src="workspace.js?v=20261030-queue" defer></script>
   </head>
   <body>
     <div class="page" id="app-root">
@@ -104,11 +104,27 @@
 
       <dialog class="records-dialog" id="records-dialog" aria-labelledby="records-title" aria-describedby="records-description">
         <div class="records-heading"><div><h2 id="records-title">Depósitos por tela</h2><p id="records-description">10 telas · Um valor por tela · Salvos neste navegador.</p></div><button class="header-button" id="records-close" type="button" aria-label="Fechar telas salvas">Fechar</button></div>
-        <div class="screen-grid" id="screen-grid" role="group" aria-label="Selecione uma tela"></div>
-        <label class="sr-only" for="dialog-screen">Selecione uma tela</label>
-        <select class="dialog-screen" id="dialog-screen" aria-label="Selecione uma tela"></select>
-        <div class="deposits-heading"><h3 id="selected-screen-title">Tela 1</h3><span>Sem sinal e sem decimais</span></div>
-        <div class="deposit-cards" id="deposit-cards"></div>
+        <div class="records-tabs" role="tablist" aria-label="Visualização das telas">
+          <button id="records-screens-tab" class="records-tab" type="button" role="tab" aria-selected="true" aria-controls="records-screens">Telas</button>
+          <button id="records-queue-tab" class="records-tab" type="button" role="tab" aria-selected="false" aria-controls="records-queue" tabindex="-1">Fila de parada <span id="queue-count">0</span></button>
+        </div>
+        <section id="records-screens" class="records-view" role="tabpanel" aria-labelledby="records-screens-tab">
+          <div class="screen-grid" id="screen-grid" role="group" aria-label="Selecione uma tela"></div>
+          <label class="sr-only" for="dialog-screen">Selecione uma tela</label>
+          <select class="dialog-screen" id="dialog-screen" aria-label="Selecione uma tela"></select>
+          <div class="deposits-heading"><h3 id="selected-screen-title">Tela 1</h3><span>Sem sinal e sem decimais</span></div>
+          <div class="deposit-cards" id="deposit-cards"></div>
+        </section>
+        <section id="records-queue" class="records-view" role="tabpanel" aria-labelledby="records-queue-tab" hidden>
+          <p class="queue-hint">Menos giros primeiro · mesmo início. Sem leitura ao vivo.</p>
+          <ol class="stop-queue" id="stop-queue" aria-label="Ordem prevista de parada"></ol>
+          <div class="queue-pagination" id="queue-pagination" hidden>
+            <button class="small-action" id="queue-previous" type="button" aria-label="Página anterior da fila">Anterior</button>
+            <span id="queue-page" aria-live="polite"></span>
+            <button class="small-action" id="queue-next" type="button" aria-label="Próxima página da fila">Próximas</button>
+          </div>
+          <p class="queue-empty" id="queue-empty" hidden>Não há telas pendentes. Salve um valor ou reabra uma tela marcada como OK.</p>
+        </section>
         <p class="records-notice" id="records-notice" role="status" aria-live="polite">Novo valor substitui o anterior.</p>
       </dialog>
     </div>
