@@ -5,6 +5,8 @@ const byId = id => appRoot.querySelector(`#${id}`);
 const form = byId('calculator-form');
 const profile = byId('profile');
 const initialValue = byId('initial-value');
+const betValue = byId('bet-value');
+const betWrap = byId('bet-wrap');
 const initialWrap = byId('initial-wrap');
 const inputWrap = byId('input-wrap');
 const inputError = byId('input-error');
@@ -13,12 +15,13 @@ const resultHint = byId('result-hint');
 const copyButton = byId('copy');
 const copyLabel = byId('copy-label');
 const copyStatus = byId('copy-status');
-const formulaTabs = Array.from(appRoot.querySelectorAll('[data-divisor]'));
+const formulaTabs = Array.from(appRoot.querySelectorAll('.formula-tab'));
 const formulaPanel = byId('formula-panel');
 const formatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const resultFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0, useGrouping: false });
 const inputFormatter = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
 let activeDivisor = 0.9;
+let customBetMode = false;
 let currentResult = null;
 let currentPresentation = null;
 let feedbackTimer;
@@ -35,6 +38,10 @@ function calculate(x, divisor, initial) {
   const z = y / divisor;
   const stop = z - 1000;
   return { y, z, stop };
+}
+
+function isValidBet(value) {
+  return Number.isFinite(value) && value > 0;
 }
 
 function format(value) {
@@ -93,7 +100,8 @@ function setError(message = '', field = profile) {
   inputError.hidden = !message;
   inputWrap.classList.toggle('invalid', Boolean(message) && field === profile);
   initialWrap.classList.toggle('invalid', Boolean(message) && field === initialValue);
-  [profile, initialValue].forEach(input => {
+  betWrap.classList.toggle('invalid', Boolean(message) && field === betValue);
+  [profile, initialValue, betValue].forEach(input => {
     if (message && field === input) input.setAttribute('aria-invalid', 'true');
     else input.removeAttribute('aria-invalid');
   });
@@ -116,6 +124,15 @@ function renderEmpty() {
 
 function update(showEmptyError = false) {
   clearCopyFeedback();
+  const bet = parseValue(betValue.value);
+  const divisorText = isValidBet(bet) ? inputFormatter.format(bet) : 'D';
+  ['divisor-label', 'step-divisor', 'formula-divisor'].forEach(id => { byId(id).textContent = divisorText; });
+  if (!isValidBet(bet)) {
+    renderEmpty();
+    setError('Digite uma bet maior que zero, como 1,35.', betValue);
+    return false;
+  }
+  activeDivisor = bet;
   const initialText = initialValue.value.trim();
   const initial = parseValue(initialText);
   const initialOperand = initial === null ? 'B' : (initial < 0 ? `(${inputFormatter.format(initial)})` : inputFormatter.format(initial));
@@ -170,22 +187,24 @@ function update(showEmptyError = false) {
 }
 
 function selectFormula(selectedTab) {
-  activeDivisor = Number(selectedTab.dataset.divisor);
+  customBetMode = selectedTab.hasAttribute('data-custom-bet');
+  if (!customBetMode) betValue.value = selectedTab.dataset.divisor.replace('.', ',');
+  byId('custom-bet-field').hidden = !customBetMode;
+  appRoot.classList.toggle('has-custom-bet', customBetMode);
   formulaTabs.forEach(tab => {
     const selected = tab === selectedTab;
     tab.setAttribute('aria-selected', String(selected));
     tab.tabIndex = selected ? 0 : -1;
   });
   formulaPanel.setAttribute('aria-labelledby', selectedTab.id);
-  const divisorText = inputFormatter.format(activeDivisor);
-  ['divisor-label', 'step-divisor', 'formula-divisor'].forEach(id => {
-    byId(id).textContent = divisorText;
-  });
   update();
 }
 
 formulaTabs.forEach((tab, index) => {
-  tab.addEventListener('click', () => selectFormula(tab));
+  tab.addEventListener('click', () => {
+    selectFormula(tab);
+    if (customBetMode) { betValue.focus(); betValue.select(); }
+  });
   tab.addEventListener('keydown', event => {
     let nextIndex;
     if (event.key === 'ArrowRight') nextIndex = (index + 1) % formulaTabs.length;
@@ -201,9 +220,10 @@ formulaTabs.forEach((tab, index) => {
 
 profile.addEventListener('input', () => update());
 initialValue.addEventListener('input', () => update());
+betValue.addEventListener('input', () => update());
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (!update(true)) (form.querySelector('[aria-invalid="true"]') || profile).focus();
+  if (!update(true)) (appRoot.querySelector('[aria-invalid="true"]') || profile).focus();
 });
 form.addEventListener('reset', event => {
   // Clear the profile while preserving the chosen initial value and formula.
@@ -260,6 +280,7 @@ copyButton.addEventListener('click', async () => {
 window.pontoCalculator = Object.freeze({
   root: appRoot,
   calculate,
+  isValidBet,
   formatResult,
   getPresentation(snapshot) {
     return describeCalculation(calculate(snapshot.x, snapshot.divisor, snapshot.initial));
@@ -270,8 +291,9 @@ window.pontoCalculator = Object.freeze({
     return { initial: parseValue(initialValue.value), x: parseValue(profile.value), divisor: activeDivisor };
   },
   restoreSnapshot(snapshot) {
-    const tab = formulaTabs.find(item => Number(item.dataset.divisor) === snapshot.divisor);
-    if (!tab || !Number.isFinite(snapshot.initial) || !Number.isFinite(snapshot.x)) return false;
+    if (!isValidBet(snapshot.divisor) || !Number.isFinite(snapshot.initial) || !Number.isFinite(snapshot.x)) return false;
+    const tab = formulaTabs.find(item => Number(item.dataset.divisor) === snapshot.divisor) || byId('formula-custom');
+    betValue.value = String(snapshot.divisor).replace('.', ',');
     initialValue.value = String(snapshot.initial).replace('.', ',');
     profile.value = String(snapshot.x).replace('.', ',');
     selectFormula(tab);

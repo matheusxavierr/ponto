@@ -6,7 +6,6 @@
   const find = id => app.querySelector(`#${id}`);
   const storageKey = 'ponto.deposits.v2';
   const legacyStorageKey = 'ponto.deposits.v1';
-  const divisors = [0.9, 0.4, 0.45, 0.8];
   const dialog = find('records-dialog');
   const target = find('target-screen');
   const dialogTarget = find('dialog-screen');
@@ -46,7 +45,7 @@
   function validatedRecord(record) {
     if (record === null) return null;
     if (!record || typeof record.id !== 'string' || record.id.length > 100 ||
-        !Number.isFinite(record.initial) || !Number.isFinite(record.x) || !divisors.includes(record.divisor) ||
+        !Number.isFinite(record.initial) || !Number.isFinite(record.x) || !calculator.isValidBet(record.divisor) ||
         !Number.isFinite(record.savedAt) || record.savedAt < 0 || record.savedAt > 8640000000000000 ||
         (record.done !== undefined && typeof record.done !== 'boolean')) throw new Error('Invalid deposit');
     const { y, z, stop } = calculator.calculate(record.x, record.divisor, record.initial);
@@ -113,6 +112,7 @@
     saveButton.setAttribute('aria-label', `Salvar novo valor na Tela ${selectedScreen + 1}`);
     cards.querySelectorAll('[data-save-current]').forEach(button => { button.disabled = !storageReadable || !snapshot; });
     cards.querySelectorAll('[data-record-action]').forEach(button => { button.disabled = !storageReadable; });
+    find('records-clear-all').disabled = !storageReadable || !screens.some(Boolean);
   }
 
   function renderCards() {
@@ -280,6 +280,18 @@
     refreshStorage(); render(); dialog.showModal();
   });
   find('records-close').addEventListener('click', () => dialog.close());
+  find('records-clear-all').addEventListener('click', () => {
+    if (!refreshStorage()) { renderSaveControls(); return; }
+    if (!screens.some(Boolean)) { render(); return; }
+    const confirmed = app.ownerDocument.defaultView.confirm('Excluir os valores de todas as 10 telas, incluindo as marcadas como OK?');
+    if (!confirmed) return;
+    if (!refreshStorage()) { renderSaveControls(); return; }
+    if (persist(Array(10).fill(null))) {
+      selectedScreen = 0; queuePage = 0; render();
+      notify('Valores de todas as telas excluídos.');
+      find('records-close').focus();
+    }
+  });
   cards.addEventListener('click', event => {
     if (event.target.closest('[data-save-current]')) saveDeposit();
     const action = event.target.closest('[data-record-action]');

@@ -4,11 +4,13 @@ Site em HTML, CSS e JavaScript puro. Abra `dist/index.html` no navegador para us
 
 ## GitHub Pages
 
-O repositório está preparado para publicar a branch `main`, na pasta `/ (root)`, em **Settings → Pages → Deploy from a branch**.
+O repositório está preparado para publicar a branch `master`, na pasta `/ (root)`, em **Settings → Pages → Deploy from a branch**.
 
 Mantenha o `index.html` da raiz, o arquivo `.nojekyll` e a pasta `dist/` no repositório. O arquivo da raiz encaminha para `./dist/`, onde ficam a calculadora, o CSS e o JavaScript. Assim, o endereço principal abre sempre a versão atual da calculadora.
 
-O campo **Valor inicial (B)** começa em `600` e pode ser alterado. Informe em **Valor no perfil (X)** o valor que aparece no perfil e escolha uma das abas: `0,9` (original), `0,4`, `0,45` ou `0,8`. A troca de aba preserva os dois valores e recalcula o resultado, as etapas e a fórmula exibida. As abas também aceitam as setas do teclado, Home e End. O botão **Limpar** apaga apenas o perfil, mantendo o valor inicial e a aba escolhida.
+O campo **Valor inicial (B)** começa em `600` e pode ser alterado. Informe em **Valor no perfil (X)** o valor que aparece no perfil e escolha uma das bets: `0,9` (original), `0,4`, `0,45`, `0,8` ou `1,35`. A aba **Outra** abre o campo **Valor da bet**, que aceita qualquer número finito maior que zero, com vírgula ou ponto decimal. A bet é o divisor D da mesma fórmula; zero, negativos e texto inválido desabilitam o resultado, a cópia e o salvamento. As bets personalizadas também são preservadas nos registros das telas.
+
+A troca de aba preserva o valor inicial e o perfil, e recalcula o resultado, as etapas e a fórmula exibida. As abas também aceitam as setas do teclado, Home e End. O botão **Limpar** apaga apenas o perfil, mantendo o valor inicial e a bet escolhida.
 
 O cálculo usa o divisor D da aba selecionada:
 
@@ -50,6 +52,8 @@ A aba **Fila de parada** do modal lista apenas telas pendentes, em ordem crescen
 Registros da versão anterior são lidos usando o cálculo mais recente de cada tela. No próximo salvamento, os 10 valores passam para o formato de um único registro por tela; os dados antigos permanecem guardados como cópia de compatibilidade, sem aparecer como depósitos extras na interface.
 
 Os registros ficam no armazenamento local deste navegador e deste endereço, sem conta ou sincronização entre dispositivos. Eles sobrevivem ao fechamento normal e ao recarregamento; apagar os dados do site também apaga os registros. Abas do mesmo endereço atualizam os registros entre si. Falhas de armazenamento são mostradas na tela, sem informar que um depósito foi salvo quando a gravação falha.
+
+O botão **Excluir todas**, no cabeçalho de **Telas salvas**, pede confirmação e esvazia as dez telas, incluindo as marcadas como OK. A fila também fica vazia e a seleção volta à Tela 1; o cálculo atual continua disponível. Cancelar preserva os registros. A exclusão é gravada no navegador e sincronizada com outras abas, sem reativar cópias de versões antigas.
 
 ## Janela flutuante
 

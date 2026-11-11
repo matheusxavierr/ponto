@@ -26,11 +26,15 @@ svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.7;stroke-linecap:r
 .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
 main{display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,2dvh,20px);min-height:0;min-width:0}
 main>section{flex-shrink:0;min-width:0}
-.formula-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;width:min(100%,400px);flex-shrink:0;background:var(--field);border:1px solid var(--line);border-radius:11px}
+.formula-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;padding:4px;width:min(100%,600px);flex-shrink:0;background:var(--field);border:1px solid var(--line);border-radius:11px}
 .formula-tab{padding:7px 10px;min-width:0;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;line-height:18px;transition:background .18s,color .18s}
 .formula-tab:hover{background:var(--badge);color:var(--ink)}
 .formula-tab[aria-selected="true"]{background:var(--accent);color:#20140e}
 .formula-panel{display:flex;flex-direction:column;gap:inherit;min-width:0;flex-shrink:0}
+.custom-bet-field{display:flex;align-items:center;gap:10px;min-width:0}
+.custom-bet-field>label{font-size:12px}
+.custom-bet-field .input-wrap{width:140px;min-width:0}
+.custom-bet-field input{font-size:16px;padding:5px 9px;letter-spacing:0}
 .eyebrow{display:flex;align-items:center;gap:9px;color:var(--accent);font-size:11px;letter-spacing:1.7px;font-weight:700;margin:0 0 8px}
 .eyebrow span{width:17px;height:2px;background:var(--accent)}
 h1{font-family:'Manrope',var(--font);font-size:clamp(27px,3.5vw,38px);line-height:1.2;letter-spacing:-1.4px;margin:0;font-weight:750}
@@ -102,6 +106,9 @@ input::placeholder{color:#96a7bd;font-weight:400;font-size:20px;letter-spacing:-
 .records-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;min-width:0}
 .records-heading h2{font-size:18px}
 .records-heading p{font-size:11px;line-height:1.4;color:var(--muted);margin:6px 0 0}
+.records-heading>div:first-child{min-width:0}
+.records-actions{display:flex;gap:6px;flex-shrink:0}
+.records-actions button:disabled{opacity:.45;cursor:default}
 .records-tabs{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--field)}
 .records-tab{flex:1;min-width:0;padding:6px 8px;border:0;border-radius:5px;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:600;line-height:18px}
 .records-tab[aria-selected="true"]{background:var(--badge);color:var(--ink)}
@@ -360,5 +367,17 @@ body.pip-mode .intro,body.pip-mode footer{display:none}
 @media(max-width:340px){
   .result-title-full{display:none}
   .result-title-compact{display:inline}
+}
+@media(max-width:580px){
+  .formula-tabs{gap:2px;padding:3px}
+  .formula-tab{font-size:11px;padding:6px 2px;white-space:nowrap}
+  #records-clear-all>span{display:none}
+}
+@media(max-width:580px) and (max-height:740px){.has-custom-bet .breakdown{display:none}}
+@media(max-height:520px){.has-custom-bet .calculate-button{display:none}}
+@media(max-height:380px) and (max-width:580px){
+  .has-custom-bet main,.has-custom-bet .formula-panel{gap:4px}
+  .has-custom-bet .custom-bet-field input{font-size:14px;padding-block:2px}
+  .has-custom-bet .input-panel{padding-block:4px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
